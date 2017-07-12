@@ -3,6 +3,7 @@
 var Promise = require("es6-promise").Promise;
 
 var path = require("path");
+var os   = require("os");
 var fs   = require("fs");
 var util = require("util");
 var exec = require("child_process").exec;
@@ -21,16 +22,30 @@ function PDFImage(pdfFilePath, options) {
 }
 
 PDFImage.prototype = {
+  isWin: function() {
+    return os.platform() === 'win32'
+  },
   constructGetInfoCommand: function () {
-    return util.format(
-      "pdfinfo '%s'",
-      this.pdfFilePath
-    );
+    if (this.isWin) {
+      return util.format(
+        'pdfinfo "%s"',
+        this.pdfFilePath
+      );
+    } else {
+      return util.format(
+        "pdfinfo '%s'",
+        this.pdfFilePath
+      );
+    }
   },
   parseGetInfoCommandOutput: function (output) {
+    var self = this;
     var info = {};
+
     output.split("\n").forEach(function (line) {
-      if (line.match(/^(.*?):[ \t]*(.*)$/)) {
+      var condition = self.isWin() ? line.replace('\r', '').match(/^(.*?):[ \t\t]*(.*)$/) : line.match(/^(.*?):[ \t]*(.*)$/)
+
+      if (condition) {
         info[RegExp.$1] = RegExp.$2;
       }
     });
@@ -75,8 +90,10 @@ PDFImage.prototype = {
     var pdfFilePath = this.pdfFilePath;
     var outputImagePath = this.getOutputImagePathForPage(pageNumber);
     var convertOptionsString = this.constructConvertOptions();
+    var format = this.isWin() ? '%s %s"%s[%d]" "%s"' : "%s %s'%s[%d]' '%s'"
+
     return util.format(
-      "%s %s'%s[%d]' '%s'",
+      format,
       this.useGM ? "gm convert" : "convert",
       convertOptionsString ? convertOptionsString + " " : "",
       pdfFilePath, pageNumber, outputImagePath
