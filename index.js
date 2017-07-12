@@ -26,17 +26,12 @@ PDFImage.prototype = {
     return os.platform() === 'win32'
   },
   constructGetInfoCommand: function () {
-    if (this.isWin) {
-      return util.format(
-        'pdfinfo "%s"',
-        this.pdfFilePath
-      );
-    } else {
-      return util.format(
-        "pdfinfo '%s'",
-        this.pdfFilePath
-      );
-    }
+    var format = this.isWin() ? 'pdfinfo "%s"': "pdfinfo '%s'"
+
+    return util.format(
+      format
+      this.pdfFilePath
+    );
   },
   parseGetInfoCommandOutput: function (output) {
     var self = this;
