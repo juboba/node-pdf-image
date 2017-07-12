@@ -29,7 +29,7 @@ PDFImage.prototype = {
     var format = this.isWin() ? 'pdfinfo "%s"': "pdfinfo '%s'"
 
     return util.format(
-      format
+      format,
       this.pdfFilePath
     );
   },
